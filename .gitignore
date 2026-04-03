@@ -24,8 +24,11 @@ out/
 *.swp
 *.swo
 
-# 测试文件
-test-*.js
+# 测试文件（保留test-real-api.js用于API测试）
+# test-*.js  # 注释掉，保留测试文件
 
 # 系统文件
 Thumbs.db
+
+# 部署文件
+deploy.zip
