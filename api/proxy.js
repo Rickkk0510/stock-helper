@@ -1,7 +1,12 @@
 // 东方财富API代理函数
 // 解决浏览器CORS限制
+// Vercel Serverless Function配置
+// @see https://vercel.com/docs/functions/serverless-functions
 
 export default async function handler(req, res) {
+  // fetch兼容性处理 (Node.js 18+内置，但显式声明更安全)
+  const fetch = globalThis.fetch || (await import('node-fetch')).default;
+
   // 处理CORS预检请求
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
