@@ -3,12 +3,6 @@
 // Vercel Serverless Function配置
 // @see https://vercel.com/docs/functions/serverless-functions
 
-// 数据源配置
-const DATA_SOURCES = {
-  EAST_MONEY: 'eastmoney',  // 东方财富
-  TENCENT: 'tencent'        // 腾讯财经（备用）
-};
-
 export default async function handler(req, res) {
   // Node.js 18+内置fetch，直接使用
 
@@ -80,20 +74,33 @@ export default async function handler(req, res) {
       'Accept': 'application/json, text/plain, */*'
     };
 
-    // 发送请求到东方财富API
-    const response = await fetch(apiUrl, { headers });
+    // 发送请求到东方财富API，添加超时处理
+    const timeout = 8000; // 8秒超时
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-    if (!response.ok) {
-      throw new Error(`东方财富API请求失败: ${response.status} ${response.statusText}`);
+    try {
+      const response = await fetch(apiUrl, {
+        headers,
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`东方财富API请求失败: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // 设置CORS头
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Content-Type', 'application/json');
+      res.status(200).json(data);
+
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      throw fetchError;
     }
-
-    const data = await response.json();
-
-    // 设置CORS头
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Content-Type', 'application/json');
-    res.status(200).json(data);
-
   } catch (error) {
     console.error('东方财富API错误:', error);
 

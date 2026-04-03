@@ -445,8 +445,30 @@ async function fetchFromTencentAPI(code) {
 
     // 2. 生产环境：调用代理API获取真实数据
     try {
+        // 智能处理输入：可能是股票代码或名称
+        let stockCode = code;
+
+        // 检查是否是6位数字股票代码
+        const isStockCode = /^\d{6}$/.test(code);
+
+        if (!isStockCode) {
+            // 如果不是6位数字，尝试从模拟数据中查找对应的股票代码
+            console.log(`输入"${code}"不是6位数字代码，尝试从模拟数据查找`);
+            const stockFromMock = findStockInMockData(code);
+
+            if (stockFromMock) {
+                // 找到对应的股票，使用其代码
+                stockCode = stockFromMock.code;
+                console.log(`从模拟数据找到对应股票：${stockFromMock.name} (${stockCode})`);
+            } else {
+                // 模拟数据中也找不到
+                showError(`未找到股票"${code}"，请确保输入正确的6位股票代码或完整的股票名称`);
+                return;
+            }
+        }
+
         // 使用代理API端点
-        const proxyUrl = `/api/proxy?code=${code}&type=realtime`;
+        const proxyUrl = `/api/proxy?code=${stockCode}&type=realtime`;
         console.log('调用代理API:', proxyUrl);
 
         const response = await fetch(proxyUrl);
@@ -626,7 +648,6 @@ function parseEastMoneyData(apiData, originalCode) {
 
         // 解析字段
         const price = parseFloatSafe(data.f43, 0);           // 当前价
-        const prevClose = parseFloatSafe(data.f60, 0);       // 昨收
         const change = parseFloatSafe(data.f169, 0);         // 涨跌幅
 
         // 成交量(手)转换为股数
