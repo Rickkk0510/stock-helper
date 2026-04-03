@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股察小助手 - 个人A股观察工具</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <div class="logo">
+                <h1><i class="fas fa-chart-line"></i> 股察小助手</h1>
+                <p class="subtitle">个人A股观察工具</p>
+            </div>
+            <div class="header-actions">
+                <button id="refreshBtn" class="btn btn-secondary">
+                    <i class="fas fa-sync-alt"></i> 刷新
+                </button>
+                <button id="clearStorageBtn" class="btn btn-warning" title="清除所有自选股">
+                    <i class="fas fa-trash-alt"></i> 清除
+                </button>
+            </div>
+        </header>
+
+        <!-- 搜索区域 -->
+        <section class="search-section">
+            <div class="search-box">
+                <input type="text" id="stockInput" placeholder="输入股票代码 (如: 000001) 或名称 (如: 平安银行)" autocomplete="off">
+                <button id="searchBtn" class="btn btn-primary">
+                    <i class="fas fa-search"></i> 查询
+                </button>
+            </div>
+            <div class="search-hint">
+                <p>示例: 000001 (平安银行), 000002 (万科A), 600519 (贵州茅台)</p>
+            </div>
+        </section>
+
+        <!-- 当前查看股票 -->
+        <section class="current-stock-section">
+            <h2 id="currentStockTitle">当前查看股票：<span class="placeholder">请输入股票代码查询</span></h2>
+            <div class="stock-info-grid">
+                <div class="info-card">
+                    <div class="info-label">最新价</div>
+                    <div class="info-value" id="currentPrice">--</div>
+                    <div class="info-change" id="priceChange">--</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">股息率</div>
+                    <div class="info-value" id="dividendRate">--</div>
+                    <div class="info-subtext" id="dividendAmount">--</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">市值</div>
+                    <div class="info-value" id="marketCap">--</div>
+                    <div class="info-subtext" id="industry">--</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">PE / PB</div>
+                    <div class="info-value" id="peRatio">--</div>
+                    <div class="info-subtext" id="pbRatio">--</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 图表区域 -->
+        <section class="chart-section">
+            <div class="section-header">
+                <h3>价格走势图 (30天)</h3>
+                <div class="chart-controls">
+                    <button class="btn-chart active" data-period="30d">30天</button>
+                    <button class="btn-chart" data-period="90d">90天</button>
+                    <button class="btn-chart" data-period="1y">1年</button>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="priceChart"></canvas>
+            </div>
+            <div class="chart-note">
+                <p><i class="fas fa-info-circle"></i> 图表数据为模拟数据，仅供参考</p>
+            </div>
+        </section>
+
+        <!-- 股息历史 -->
+        <section class="dividend-section">
+            <h3>股息历史</h3>
+            <div class="dividend-grid" id="dividendHistory">
+                <div class="dividend-placeholder">
+                    <p>查询股票后显示股息历史信息</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 自选股区域 -->
+        <section class="watchlist-section">
+            <div class="section-header">
+                <h3>我的自选股 (<span id="watchlistCount">0</span> 只)</h3>
+                <button id="addToWatchlistBtn" class="btn btn-success" disabled>
+                    <i class="fas fa-plus"></i> 加入自选
+                </button>
+            </div>
+
+            <div class="watchlist-container">
+                <div id="watchlistEmpty" class="empty-state">
+                    <i class="fas fa-star"></i>
+                    <p>暂无自选股，查询股票后点击"加入自选"</p>
+                </div>
+                <div id="watchlistItems" class="watchlist-items">
+                    <!-- 自选股列表将通过JS动态生成 -->
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button id="removeFromWatchlistBtn" class="btn btn-danger" disabled>
+                    <i class="fas fa-minus"></i> 移除自选
+                </button>
+                <button id="exportWatchlistBtn" class="btn btn-secondary">
+                    <i class="fas fa-download"></i> 导出列表
+                </button>
+                <button id="importWatchlistBtn" class="btn btn-secondary">
+                    <i class="fas fa-upload"></i> 导入列表
+                </button>
+            </div>
+        </section>
+
+        <!-- 数据说明 -->
+        <footer class="footer">
+            <div class="data-disclaimer">
+                <p><i class="fas fa-exclamation-triangle"></i> <strong>数据说明：</strong>本工具使用腾讯财经公开数据，仅供参考，不构成投资建议。股息数据为手动维护，可能更新不及时。</p>
+                <p><i class="fas fa-code"></i> <strong>技术说明：</strong>纯前端实现，数据存储在浏览器本地，无需登录，保护隐私。</p>
+            </div>
+            <div class="version-info">
+                <p>版本: 1.0.0 | 最后更新: 2026-04-02</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 加载遮罩 -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>加载中...</p>
+        </div>
+    </div>
+
+    <!-- 脚本 -->
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
