@@ -3,6 +3,12 @@
 // Vercel Serverless Function配置
 // @see https://vercel.com/docs/functions/serverless-functions
 
+// 数据源配置
+const DATA_SOURCES = {
+  EAST_MONEY: 'eastmoney',  // 东方财富
+  TENCENT: 'tencent'        // 腾讯财经（备用）
+};
+
 export default async function handler(req, res) {
   // Node.js 18+内置fetch，直接使用
 
@@ -36,8 +42,6 @@ export default async function handler(req, res) {
     // 深圳股票: 000001-001000, 002xxx, 300xxx
     // 上海股票: 600xxx, 601xxx, 603xxx, 605xxx, 688xxx
     let market = '0'; // 默认深圳
-    const codeNum = parseInt(code, 10);
-
     if (code.startsWith('6')) {
       market = '1'; // 上海
     }
